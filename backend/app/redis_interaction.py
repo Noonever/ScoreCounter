@@ -80,7 +80,7 @@ def create_scoreboard(categories: list, players: list = []) -> str:
         redis.hset(f"scoreboards:{code}:{player}", mapping=mapped_categories)
 
     redis.hset(f"scoreboards:{code}:categories", mapping=mapped_categories)
-    redis.set(f"scoreboards:{code}:open", "True")
+    redis.set(f"scoreboards:{code}:open", "False" if players else "True")
 
     players_message = f", players {players}" if players else ""
     logger.info(f"Scoreboard {code} created with categories {categories}{players_message}.")
@@ -97,6 +97,7 @@ def get_scoreboard_status(code: str) -> str:
 @__check_for_scoreboard_existance(error_message="ERR: Cannot close scoreboard")
 def close_scoreboard(code: str) -> str:
     redis.set(f"scoreboards:{code}:open", "False")
+    return f"Scoreboard {code} closed."
 
 
 @__check_for_scoreboard_existance(error_message="ERR: Cannot add player")
@@ -104,6 +105,8 @@ def add_player(code: str, player: str):
     scoreboard_status = get_scoreboard_status(code=code)
     if scoreboard_status == "False":
         error = f"ERR: Cannot add player {player}(Scoreboard{code} is closed)!"
+        logger.error(error)
+        return error
     categories = get_scoreboard_categories(code=code)
     mapped_categories = {category: "none" for category in categories}
     mapped_categories.update({"total": "none"})
@@ -140,17 +143,22 @@ def update_scoreboard(code: str, player: str, category: str, score: int) -> str:
 
 
 @__check_for_scoreboard_existance(error_message="ERR: Cannot get player's progress")
-@__check_for_player_existance(error_message="ERR: Cannot get player's progress")
-def get_player_progress(code: str, player: str) -> float | str:
-    player_score = {key.decode() : value.decode() for key, value in redis.hgetall(f"scoreboards:{code}:{player}").items()}
-    unfilled_lenght = list(player_score.values()).count("none") - 1
-    full_lenght = len(player_score) - 1
-    return (full_lenght - unfilled_lenght )/ full_lenght
+def get_players_progress(code: str) -> dict[str, float] | str:
+    players = get_scoreboard_players(code=code)
+    players_progress = {}
+    for player in players:
+        player_score = {key.decode() : value.decode() for key, value in redis.hgetall(f"scoreboards:{code}:{player}").items()}
+        unfilled_lenght = list(player_score.values()).count("none") - 1
+        full_lenght = len(player_score) - 1
+        player_progress = (full_lenght - unfilled_lenght )/ full_lenght
+        players_progress.update({player: player_progress})
+
+    return players_progress 
 
 
 @__check_for_scoreboard_existance(error_message="ERR: Cannot count scoreboard")
 def get_counted_scoreboard(code: str):
-    scoreboard_players = [player.replace(f"scoreboards:{code}:", "") for player in __get_redis_keys() if f"scoreboards:{code}" in player]
+    scoreboard_players = get_scoreboard_players(code=code)
     categories = [key.decode() for key in redis.hgetall(f"scoreboards:{code}:{scoreboard_players[0]}").keys()]
     max_in_category = {category: 0 for category in categories}
     category_leaders = {category: set() for category in categories}
