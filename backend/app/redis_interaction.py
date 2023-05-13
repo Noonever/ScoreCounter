@@ -48,7 +48,11 @@ def get_scoreboard_categories(code: str) -> list[str]:
 
 @__check_for_scoreboard_existance(error_message="ERR: Cannot get players")
 def get_scoreboard_players(code: str):
-    players = [player.replace(f"scoreboards:{code}:", "") for player in __get_redis_keys() if f"scoreboards:{code}" in player and "categories" not in player and "open" not in player]
+    players = []
+    for player in __get_redis_keys():
+        if f"scoreboards:{code}" in player and "categories" not in player and "open" not in player and "mode" not in player:
+            players.append(player.replace(f"scoreboards:{code}:", ""))
+
     return players
 
 
@@ -67,7 +71,7 @@ def __check_for_player_existance(error_message):
     return _check_for_player_existance
 
 
-def create_scoreboard(categories: list, players: list = []) -> str:
+def create_scoreboard(mode: str, categories: list, players: list = []) -> str:
     code = generate_random_code()
     while __scoreboard_exists(code=code):
         code = generate_random_code()
@@ -80,7 +84,8 @@ def create_scoreboard(categories: list, players: list = []) -> str:
         redis.hset(f"scoreboards:{code}:{player}", mapping=mapped_categories)
 
     redis.hset(f"scoreboards:{code}:categories", mapping=mapped_categories)
-    redis.set(f"scoreboards:{code}:open", "False" if players else "True")
+    redis.set(f"scoreboards:{code}:open", "Opened" if players else "Closed")
+    redis.set(f"scoreboard:{code}:mode", mode)
 
     players_message = f", players {players}" if players else ""
     logger.info(f"Scoreboard {code} created with categories {categories}{players_message}.")
@@ -88,22 +93,28 @@ def create_scoreboard(categories: list, players: list = []) -> str:
     return code
 
 
-@__check_for_scoreboard_existance(error_message="ERR: Cannot get status")
+@__check_for_scoreboard_existance
+def get_scoreboard_mode(code: str) -> str:
+    mode = redis.get(f"scoreboard:{code}:mode")
+    return mode
+
 def get_scoreboard_status(code: str) -> str:
+    if not __scoreboard_exists(code=code):
+        return "DoNotExist"
     status = redis.get(f"scoreboards:{code}:open").decode()
     return status
 
 
 @__check_for_scoreboard_existance(error_message="ERR: Cannot close scoreboard")
 def close_scoreboard(code: str) -> str:
-    redis.set(f"scoreboards:{code}:open", "False")
+    redis.set(f"scoreboards:{code}:open", "Closed")
     return f"Scoreboard {code} closed."
 
 
 @__check_for_scoreboard_existance(error_message="ERR: Cannot add player")
 def add_player(code: str, player: str):
     scoreboard_status = get_scoreboard_status(code=code)
-    if scoreboard_status == "False":
+    if scoreboard_status == "Closed":
         error = f"ERR: Cannot add player {player}(Scoreboard{code} is closed)!"
         logger.error(error)
         return error
@@ -190,7 +201,3 @@ def get_counted_scoreboard(code: str):
         max_score_in_categories=max_in_category,
         categories_leaders=category_leaders
     )
-
-# functions to export:
-# create_scoreboard, get_scoreboard_status, close_scoreboard, add_player, get_scoreboard_players, get_scoreboard_categories, update_scoreboard, get_counted_scoreboard
-print(get_scoreboard_players(code="TSTNVAA"))

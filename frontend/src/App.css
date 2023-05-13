@@ -1,38 +1,85 @@
 .App {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(#ED7A9D, #b9ee8e);
+  font-size: 3vh;
+}
+.column-container {
   text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
+}
+
+.templates {
+  width: 100%;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.welcome-text{
+  font-size: 6vh;
+  font-weight: bolder;
+  margin-top: 0vh;
+  margin-bottom: 0vh;
+  padding: 0%;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.ask-text {
+  font-size: 5vh;
+  font-weight: bolder;
+  margin-bottom: 2vh;
+  padding: 0px;
+}
+
+.ask-text-mini {
+  font-size: 3vh;
+  font-weight: bolder;
+  margin-bottom: 2vh;
+  padding: 0px;
+}
+
+.btn-row {
+  justify-content: space-between;
+}
+
+button {
+  height: 6vh;
+  width: 90%;
+  margin-bottom: 1vh;
+  margin-top: 1vh;
+  font-size: 3vh;
+  font-weight: bold;
+  border-radius: 2vh;
+  border: none;
+  background: linear-gradient(#8787E6, #c1f596d3);
+  box-shadow: 0px 0px 4px black;
+  cursor: pointer;
+  outline: none;
+  transition: all 20ms;
+}
+
+button:active {
+  background-color: #3e8e41;
+  transform: translateY(2px);
+}
+
+button.form-btn {
+  width: 43%;
+  margin-left: 2%;
+  margin-right: 2%;
+}
+
+input {
+  height: 6vh;
+  width: 88%;
+  border: none;
+  border-radius: 2vh;
+  margin-top: 1vh;
+  margin-bottom: 1vh;
+}
+
+input:focus {
+  outline: none;
 }

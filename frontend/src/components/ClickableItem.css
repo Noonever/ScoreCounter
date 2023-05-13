@@ -1,0 +1,44 @@
+.clickable-container {
+    height: 6vh;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    vertical-align: middle;
+    align-content: center;
+    justify-content: space-between;
+    background: linear-gradient(#ed7a9cb6, #AEED79);
+    border-radius: 100px;
+    margin-top: 1vh;
+    margin-bottom: 1vh;
+    box-shadow: 0px 0px 4px black;
+}
+
+.clickable {
+    position: absolute;
+    clear: both;
+    overflow-y: hidden;
+    width: 75%;
+    height: 100%;
+  }
+
+.clickable-text {
+    margin-left: 2%;
+}
+
+.remove {
+    width: 15%; 
+    height: 90%;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin-right: 1%;
+    border-radius: 200px;
+    border: none;
+    background: linear-gradient(#ed7a84, #edae7a);
+    box-shadow: 0px 0px 3px 1px rgb(175, 0, 0);
+}
+
+.remove:active {
+    box-shadow: 0px 0px 3px 1px rgb(255, 255, 255);
+    transform:scale(0.9)
+}
