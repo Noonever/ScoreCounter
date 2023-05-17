@@ -23,13 +23,14 @@ export default function NewTemplate() {
 
     const itemsCallback = (items: {[char: string]: string}) => {
         const newCategories = Object.keys(items)
+        console.log(items)
         setCurrentCategories(newCategories)
     }
 
 
     const nextClickAction = () => {
         setSessionCategories(currentCategories)
-        navigate("/create/end")
+        navigate("/create/settings")
     }
 
 
@@ -43,7 +44,8 @@ export default function NewTemplate() {
 
     async function saveTemplate(templateName: string) {
         if (templateName) {
-            const newTemplate = getSessionCategories()
+            console.log(templateName)
+            const newTemplate = currentCategories
             const newTemplates = getLocalTemplates()
             newTemplates[templateName] = newTemplate
             setLocalTemplates(newTemplates)
@@ -57,8 +59,10 @@ export default function NewTemplate() {
     const handleTemplateSave = (e: React.FormEvent<HTMLFormElement> ) => {
         e.preventDefault();
         const data = formData["body"]
-        console.log(`from handle ${data}`)
-        saveTemplate(data);
+        if (data) {
+            console.log(`from handle ${data}`)
+            saveTemplate(data);
+        }
 
     }
 

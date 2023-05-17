@@ -4,7 +4,7 @@ from random import choices
 from string import ascii_uppercase
 from schemas import ScoreBoardData
 
-def generate_random_code(lenght: int = 6) -> str:
+def generate_random_code(lenght: int = 2) -> str:
     return "".join(choices(ascii_uppercase, k=lenght))
 
 example = {
@@ -47,13 +47,15 @@ def get_scoreboard_categories(code: str) -> list[str]:
 
 
 @__check_for_scoreboard_existance(error_message="ERR: Cannot get players")
-def get_scoreboard_players(code: str):
-    players = []
-    for player in __get_redis_keys():
-        if f"scoreboards:{code}" in player and "categories" not in player and "open" not in player and "mode" not in player:
-            players.append(player.replace(f"scoreboards:{code}:", ""))
-
-    return players
+def get_scoreboard_players(code: str) -> dict[str, str]:
+    
+    final = {}
+    for key in __get_redis_keys():
+        if f"scoreboards:{code}" in key and "categories" not in key and "open" not in key and "mode" not in key and "color" not in key:
+            player = key.replace(f"scoreboards:{code}:", "")
+            color = redis.get(f"scoreboards:{code}:{player}:color").decode()
+            final[player] = color
+    return final
 
 
 def __check_for_player_existance(error_message): 
@@ -71,7 +73,7 @@ def __check_for_player_existance(error_message):
     return _check_for_player_existance
 
 
-def create_scoreboard(mode: str, categories: list, players: list = []) -> str:
+def create_scoreboard(mode: str, categories: list, players: dict[str, str] = {}) -> str:
     code = generate_random_code()
     while __scoreboard_exists(code=code):
         code = generate_random_code()
@@ -80,11 +82,15 @@ def create_scoreboard(mode: str, categories: list, players: list = []) -> str:
     mapped_categories = {category: "none" for category in categories}
     mapped_categories.update({"total": "none"})
 
-    for player in players:
-        redis.hset(f"scoreboards:{code}:{player}", mapping=mapped_categories)
+    if players:
+        for player in players.keys():
+            redis.hset(f"scoreboards:{code}:{player}", mapping=mapped_categories)
+
+        for color in players.values():
+            redis.set(f"scoreboards:{code}:{player}:color", color)
 
     redis.hset(f"scoreboards:{code}:categories", mapping=mapped_categories)
-    redis.set(f"scoreboards:{code}:open", "Opened" if players else "Closed")
+    redis.set(f"scoreboards:{code}:open", "Closed" if players else "Opened")
     redis.set(f"scoreboard:{code}:mode", mode)
 
     players_message = f", players {players}" if players else ""
@@ -93,10 +99,11 @@ def create_scoreboard(mode: str, categories: list, players: list = []) -> str:
     return code
 
 
-@__check_for_scoreboard_existance
+@__check_for_scoreboard_existance(error_message="ERR: Cannot get mode")
 def get_scoreboard_mode(code: str) -> str:
-    mode = redis.get(f"scoreboard:{code}:mode")
+    mode = redis.get(f"scoreboard:{code}:mode").decode()
     return mode
+
 
 def get_scoreboard_status(code: str) -> str:
     if not __scoreboard_exists(code=code):
@@ -112,7 +119,7 @@ def close_scoreboard(code: str) -> str:
 
 
 @__check_for_scoreboard_existance(error_message="ERR: Cannot add player")
-def add_player(code: str, player: str):
+def add_player(code: str, player: str, color: str):
     scoreboard_status = get_scoreboard_status(code=code)
     if scoreboard_status == "Closed":
         error = f"ERR: Cannot add player {player}(Scoreboard{code} is closed)!"
@@ -122,7 +129,8 @@ def add_player(code: str, player: str):
     mapped_categories = {category: "none" for category in categories}
     mapped_categories.update({"total": "none"})
     redis.hset(f"scoreboards:{code}:{player}", mapping=mapped_categories)
-    success = f"Player {player} added to scoreboard {code}"
+    redis.set(f"scoreboards:{code}:{player}:color", color)
+    success = f"Player {player} with color {color} added to scoreboard {code}"
     logger.info(success)
     return success
 

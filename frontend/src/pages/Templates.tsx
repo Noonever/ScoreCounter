@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 import ClickableItem from "../components/ClickableItem";
 
-import { getLocalTemplates, setLocalTemplates, getTemplateCategories, getScoreboardMode, setSessionCategories } from "../utils/storageFuncs";
+import { getLocalTemplates, setLocalTemplates, getTemplateCategories, setSessionCategories } from "../utils/storageFuncs";
 import { text } from "stream/consumers";
 
 export default function Templates() {
@@ -17,6 +17,7 @@ export default function Templates() {
     function chooseTemplate(templateKey: string): void {
         const categories = getTemplateCategories(templateKey)
         setSessionCategories(categories)
+        navigate("/create/settings")
     }
 
     const removeItem = (templateKey: string) => {
@@ -31,7 +32,7 @@ export default function Templates() {
     key={item[0]}
     itemName={item[0]}
     onButtonClickAction={()=>removeItem(item[0])}
-    onDivClickAction={null}
+    onDivClickAction={()=>chooseTemplate(item[0])}
     textColor={null}
     ></ClickableItem>
     )
@@ -43,7 +44,6 @@ export default function Templates() {
                 {templateItems}
                 <button onClick={()=>navigate("/create/new-template")}>New template</button>
             </div>
-            
         </div>
     )
 }

@@ -65,7 +65,6 @@ export default function DynamicForm({itemsCallback, onNextClick, useColors, defa
         }
     }
 
-    console.log(itemsDict)
     return (
         <form onSubmit={(e)=>onSubmit(e)}>
             <input style={{color: currentColor}} type="text" id="body" value={body} onChange={(e)=>onChange(e)}></input>
